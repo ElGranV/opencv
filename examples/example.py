@@ -4,7 +4,7 @@ from modules.analysis import detect_area, DEFAULT_NUMBER_OF_AREAS
 import cv2
 
 
-trk = Tracker("person")
+trk = Tracker("face")
 trk.init(0, 120)
 
 angle = 0
