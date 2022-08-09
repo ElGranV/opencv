@@ -1,14 +1,19 @@
 import cv2
+import time
 
 
 TRACKING_TYPE = "CSRT"
+TRACKING_VIEW_NAME = "Enov Tracking View"
 
 class Tracker:
     #--------Static Attributes---------------
-    CONFIG = {"DEFAULT_FACE_CASCADE_SCALE_FACTOR":1.1,
-    "DEFAULT_FACE_CASCADE_MIN_NEIGHBORS":4 ,
-    "DEFAULT_HOG_WIN_STRIDE": (4,4),
-    "DEFAULT_HOG_SCALE":1.2
+    CONFIG = {"FACE_CASCADE_SCALE_FACTOR":1.1,
+    "FACE_CASCADE_MIN_NEIGHBORS":4 ,
+    "HOG_WIN_STRIDE": (4,4),
+    "HOG_SCALE":1.2,
+    "DETECTION_RATE":120,
+    "TRACKING_TYPE":"face",
+    "VIDEO_PATH":0,
     }
     #----------------------------------------
 
@@ -48,13 +53,14 @@ class Tracker:
             self.hog = cv2.HOGDescriptor()
             self.hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
         
-        self.config = {
+        self.config = Tracker.CONFIG
+      
 
-        }
+
         
 
     
-    def init(self, video_path = 0, detection_rate = 50):
+    def init(self, video_path = 0, detection_rate = 120):
         """
         Initialisation du tracker.
         -   Ouverture du flux vidéo. 
@@ -70,11 +76,12 @@ class Tracker:
             en fonction du fps de la camera, pour ne pas trop ralentir le système. 
         """
         self.video = cv2.VideoCapture(video_path)
+    # if video_path==0: time.sleep(500)
         if not self.video.isOpened():
             raise(RuntimeError("Erreur à l'ouverture du flux video"))
         if detection_rate > 0: self.detection_rate = detection_rate
         else: self.detection_rate = 50
-    
+        
     
     def update(self, show = False):
         """
@@ -84,8 +91,10 @@ class Tracker:
         -------------
         List [success: Bool, bbox : tuple of coordinates for the bounding box]
         """
+        
         #on récupère une frame du flux video
         ok, frame = self.video.read()
+        
         if ok:
             #On redimensionne la taille de la frame et on la passe en noir et blanc pour accélérer la détection
             frame = cv2.resize(frame, (640, 480))
@@ -140,12 +149,12 @@ class Tracker:
             {"boxes": liste de boxes où des individus ont été détectés}
         """
         if self.detection_type == "face":
-            return{"boxes":self.face_cascade.detectMultiScale(frame, scaleFactor = Tracker.CONFIG["DEFAULT_FACE_CASCADE_SCALE_FACTOR"], 
-            minNeighbors = Tracker.CONFIG["DEFAULT_FACE_CASCADE_MIN_NEIGHBORS"])}
+            return{"boxes":self.face_cascade.detectMultiScale(frame, scaleFactor = self.config["FACE_CASCADE_SCALE_FACTOR"], 
+            minNeighbors = self.config["FACE_CASCADE_MIN_NEIGHBORS"])}
         
         if self.detection_type == "person":
-            boxes, weights = self.hog.detectMultiScale(frame, winStride = Tracker.CONFIG["DEFAULT_HOG_WIN_STRIDE"], 
-            scale=Tracker.CONFIG["DEFAULT_HOG_SCALE"])
+            boxes, weights = self.hog.detectMultiScale(frame, winStride = self.config["HOG_WIN_STRIDE"], 
+            scale=self.config["HOG_SCALE"])
             return {"boxes": boxes, "weights": weights}
         
         return {"boxes":[]}
@@ -163,7 +172,7 @@ class Tracker:
 
         # Display tracker type on frame
         cv2.putText(frame, "Tracker", (100,20), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (50,170,50),2);
-        cv2.imshow('frame', frame)
+        cv2.imshow(TRACKING_VIEW_NAME, frame)
     
     def __del__(self):
         self.video.release()
