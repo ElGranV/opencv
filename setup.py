@@ -3,7 +3,7 @@ from cx_Freeze import setup, Executable
 
 # Dependencies are automatically detected, but it might need fine tuning.
 # "packages": ["os"] is used as example only
-build_exe_options = {"packages": ["os", "cv2", "numpy", "time", "threading", "platform", "tkinter"]}
+build_exe_options = {"packages": ["os", "cv2", "numpy", "time", "threading", "platform", "tkinter"], "include_files":["modules/haarcascade_frontalface_default.xml"]}
 
 # base="Win32GUI" should be used only for Windows GUI app
 base = None
@@ -15,5 +15,6 @@ setup(
     version="0.1",
     description="Interface de tracking facial (ElGranV)",
     options={"build_exe": build_exe_options},
-    executables=[Executable("MainTk.py", base=base)],
+    executables=[Executable("MainTk.py", shortcutName="Enov Tracking",
+            shortcutDir="DesktopFolder", base=base)],
 )
